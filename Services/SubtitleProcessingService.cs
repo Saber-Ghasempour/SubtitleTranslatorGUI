@@ -39,7 +39,6 @@ namespace SubtitleTranslatorGUI.Services
            DataGridViewRow row,
            string sourceLang,
            string targetLang,
-           Action<int> reportProgress,
            Func<bool> isPaused,
            CancellationToken token)
         {
@@ -75,8 +74,6 @@ namespace SubtitleTranslatorGUI.Services
                     return false;
 
                 LoggerService.Log($"Translating {b + 1} of {totalBatches} ...");
-                reportProgress?.Invoke((int)((b + 1) * 100.0 / totalBatches));
-
                 batchTasks.Add(SubtitleTranslator.TranslateBatchSrt(batchSrt, sourceLang, targetLang, token));
             }
 

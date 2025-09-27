@@ -189,6 +189,9 @@ namespace SubtitleTranslatorGUI
         private async Task ProcessFilesAsync(CancellationToken token)
         {
             int batchSize = 100;
+            pbFileProgress.Style = ProgressBarStyle.Blocks;
+            pbFileProgress.Value = 0;
+            pbFileProgress.Maximum = dgvFiles.Rows.Count;
 
             foreach (DataGridViewRow row in dgvFiles.Rows)
             {
@@ -205,10 +208,6 @@ namespace SubtitleTranslatorGUI
                         row,
                         cmbSourceLanguage.SelectedItem.ToString(),
                         cmbTargetLanguage.SelectedItem.ToString(),
-                        progress => {
-                            pbFileProgress.Value = progress;
-                            Application.DoEvents();
-                        },
                         () => _isPaused,
                         token
                     );
@@ -221,13 +220,8 @@ namespace SubtitleTranslatorGUI
                     string srtPath = GetOriginalSubtitlePath(videoPath);
 
                     AppendLog($"Extracting subtitle from {fileItem.FileName} ...");
-                    pbFileProgress.Style = ProgressBarStyle.Marquee;
-                    pbFileProgress.MarqueeAnimationSpeed = 30;
 
                     bool ok = await FFmpegSubtitleService.ExtractSubtitle(videoPath, selectedTrackIndex, srtPath);
-
-                    pbFileProgress.Style = ProgressBarStyle.Blocks;
-                    pbFileProgress.Value = 0;
 
                     if (ok)
                     {
@@ -238,10 +232,6 @@ namespace SubtitleTranslatorGUI
                             row,
                             cmbSourceLanguage.SelectedItem.ToString(),
                             cmbTargetLanguage.SelectedItem.ToString(),
-                            progress => {
-                                pbFileProgress.Value = progress;
-                                Application.DoEvents();
-                            },
                             () => _isPaused,
                             token
                         );
@@ -251,6 +241,7 @@ namespace SubtitleTranslatorGUI
                         AppendLog($"❌ There is an error with extracting subtitle from: {fileItem.FileName}.");
                         row.Cells["Status"].Value = FileStatus.SubtitleExtractionFailed.ToString();
                     }
+                    pbFileProgress.Value++;
                 }
             }
             btnStart.Text = "Start";
