@@ -42,6 +42,7 @@
             // 
             dgvEdit.AllowUserToAddRows = false;
             dgvEdit.AllowUserToDeleteRows = false;
+            dgvEdit.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dgvEdit.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvEdit.Columns.AddRange(new DataGridViewColumn[] { Number, TimeCode, OriginalText, TranslatedText });
             dgvEdit.Location = new Point(12, 12);
@@ -85,6 +86,7 @@
             // 
             // btnSave
             // 
+            btnSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnSave.Location = new Point(902, 597);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(94, 29);
@@ -100,7 +102,7 @@
             ClientSize = new Size(1008, 634);
             Controls.Add(btnSave);
             Controls.Add(dgvEdit);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle = FormBorderStyle.SizableToolWindow;
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "SubtitleEditForm";
             Text = "Subtitle Edit Form";

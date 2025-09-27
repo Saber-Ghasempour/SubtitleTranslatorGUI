@@ -108,7 +108,7 @@
             Controls.Add(gbAdd);
             Controls.Add(btnRemove);
             Controls.Add(lbKeys);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ApiKeyManagerForm";
             Text = "Api Key Manager Form";

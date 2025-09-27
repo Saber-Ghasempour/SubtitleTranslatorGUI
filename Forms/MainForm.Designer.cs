@@ -54,6 +54,7 @@
             // 
             // cmbTargetLanguage
             // 
+            cmbTargetLanguage.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             cmbTargetLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbTargetLanguage.FormattingEnabled = true;
             cmbTargetLanguage.Items.AddRange(new object[] { "Persian (fa)", "Arabic (ar)", "French (fr)", "German (de)", "Spanish (es)", "Turkish (tr)", "Russian (ru)", "Chinese (zh)", "Japanese (ja)", "English (en)" });
@@ -70,11 +71,12 @@
             txtLog.Name = "txtLog";
             txtLog.ReadOnly = true;
             txtLog.ScrollBars = ScrollBars.Both;
-            txtLog.Size = new Size(1241, 413);
+            txtLog.Size = new Size(1241, 435);
             txtLog.TabIndex = 0;
             // 
             // pbFileProgress
             // 
+            pbFileProgress.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             pbFileProgress.Location = new Point(12, 298);
             pbFileProgress.Name = "pbFileProgress";
             pbFileProgress.Size = new Size(1217, 14);
@@ -82,6 +84,7 @@
             // 
             // btnStart
             // 
+            btnStart.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnStart.Enabled = false;
             btnStart.Location = new Point(1135, 265);
             btnStart.Name = "btnStart";
@@ -93,6 +96,7 @@
             // 
             // btnRemoveFromList
             // 
+            btnRemoveFromList.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnRemoveFromList.Location = new Point(12, 265);
             btnRemoveFromList.Name = "btnRemoveFromList";
             btnRemoveFromList.Size = new Size(94, 29);
@@ -150,12 +154,13 @@
             dgvFiles.AllowDrop = true;
             dgvFiles.AllowUserToAddRows = false;
             dgvFiles.AllowUserToDeleteRows = false;
+            dgvFiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dgvFiles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvFiles.Columns.AddRange(new DataGridViewColumn[] { FileName, Type, SubtitleTrack, Status, EditColumn });
-            dgvFiles.Location = new Point(12, 30);
+            dgvFiles.Location = new Point(0, 27);
             dgvFiles.Name = "dgvFiles";
             dgvFiles.RowHeadersWidth = 51;
-            dgvFiles.Size = new Size(1217, 229);
+            dgvFiles.Size = new Size(1241, 229);
             dgvFiles.TabIndex = 7;
             dgvFiles.CellContentClick += dgvFiles_CellContentClick;
             dgvFiles.DragDrop += dgvFiles_DragDrop;
@@ -204,6 +209,7 @@
             // 
             // label1
             // 
+            label1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             label1.AutoSize = true;
             label1.Location = new Point(808, 268);
             label1.Name = "label1";
@@ -213,6 +219,7 @@
             // 
             // label2
             // 
+            label2.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             label2.AutoSize = true;
             label2.Location = new Point(465, 268);
             label2.Name = "label2";
@@ -222,6 +229,7 @@
             // 
             // cmbSourceLanguage
             // 
+            cmbSourceLanguage.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             cmbSourceLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSourceLanguage.FormattingEnabled = true;
             cmbSourceLanguage.Items.AddRange(new object[] { "Persian (fa)", "Arabic (ar)", "French (fr)", "German (de)", "Spanish (es)", "Turkish (tr)", "Russian (ru)", "Chinese (zh)", "Japanese (ja)", "English (en)" });
@@ -234,7 +242,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1241, 731);
+            ClientSize = new Size(1241, 753);
             Controls.Add(label2);
             Controls.Add(cmbSourceLanguage);
             Controls.Add(label1);
@@ -245,8 +253,8 @@
             Controls.Add(btnStart);
             Controls.Add(pbFileProgress);
             Controls.Add(txtLog);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MinimumSize = new Size(1200, 800);
             Name = "MainForm";
             Text = "Subtitle Translator Using AI (Gemini)";
             toolStrip1.ResumeLayout(false);
