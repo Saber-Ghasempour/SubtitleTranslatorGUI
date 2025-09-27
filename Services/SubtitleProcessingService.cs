@@ -54,33 +54,39 @@ namespace SubtitleTranslatorGUI.Services
             LoggerService.Log($"Translating subtitle file: {Path.GetFileName(srtPath)} ...");
 
             int totalBatches = (int)Math.Ceiling(blocks.Count / (double)batchSize);
+            var batchTasks = new List<Task<string>>();
+            var batchSrtList = new List<string>();
+
             for (int b = 0; b < totalBatches; b++)
             {
-                if (token.IsCancellationRequested)
-                    return false;
+                int start = b * batchSize;
+                var batch = blocks.Skip(start).Take(batchSize).ToList();
+                string batchSrt = SubtitleUtils.FormatBlocksToSrtText(batch);
+                batchSrtList.Add(batchSrt);
 
+                // Pause logic
                 while (isPaused())
                 {
                     await Task.Delay(1000, token);
                     if (token.IsCancellationRequested)
                         return false;
                 }
-
-                reportProgress?.Invoke((int)((b + 1) * 100.0 / totalBatches));
-                int start = b * batchSize;
-                var batch = blocks.Skip(start).Take(batchSize).ToList();
-                string batchSrt = SubtitleUtils.FormatBlocksToSrtText(batch);
+                if (token.IsCancellationRequested)
+                    return false;
 
                 LoggerService.Log($"Translating {b + 1} of {totalBatches} ...");
+                reportProgress?.Invoke((int)((b + 1) * 100.0 / totalBatches));
 
-                var translated = await SubtitleTranslator.TranslateBatchSrt(
-                    batchSrt,
-                    sourceLang,
-                    targetLang
-                );
+                batchTasks.Add(SubtitleTranslator.TranslateBatchSrt(batchSrt, sourceLang, targetLang, token));
+            }
 
+            var results = await Task.WhenAll(batchTasks);
+
+            for (int b = 0; b < totalBatches; b++)
+            {
+                var translated = results[b];
                 File.AppendAllText(outputPath,
-                    !string.IsNullOrEmpty(translated) ? translated + Environment.NewLine : batchSrt + Environment.NewLine,
+                    !string.IsNullOrEmpty(translated) ? translated + Environment.NewLine : batchSrtList[b] + Environment.NewLine,
                     Encoding.UTF8);
 
                 LoggerService.Log(!string.IsNullOrEmpty(translated)
