@@ -99,6 +99,91 @@ namespace SubtitleTranslatorGUI.Services
             return null;
         }
 
+        public static async Task<string> SpeechToTextAsync(string audioFilePath, string targetLang, CancellationToken token)
+        {
+            int retryCount = 0;
+
+            while (retryCount < ApiKeyManager.ApiKeys.Count)
+            {
+                string apiKey = ApiKeyManager.GetCurrentApiKey();
+
+                try
+                {
+                    byte[] audioBytes = await File.ReadAllBytesAsync(audioFilePath, token);
+                    string base64Audio = Convert.ToBase64String(audioBytes);
+                    string mimeType = "audio/wav";
+
+                    using var httpClient = new HttpClient();
+                    httpClient.DefaultRequestHeaders.Add("X-goog-api-key", apiKey);
+
+                    string prompt =
+                        $@"You are given an audio part of a video file.
+                        Analyze the provided audio file to automatically detect the spoken language, then create accurate {targetLang} subtitles with precise timestamps in standard SRT format.
+                        For each dialogue segment, MAKE SURE TO PROVIDE: sequential numbering with a newline at the end, then START and END timestamps in HH:MM:SS,mmm format with a newline at the end, then the text with 2 endline at the end.
+                        DO NOT add the original text. Just provide the requested translation.
+                        Ensure subtitles are properly synchronized, have appropriate reading speeds (maximum 2-3 lines per subtitle, 160-180 characters per line), maintain natural grammar and colloquialisms, and include speaker identification when multiple speakers are present.
+                        Output the complete text file ready for download with proper SRT formatting including blank lines between each subtitle block.
+                        Return ONLY the translated subtitle file in valid SRT format(no commentary).
+                    ";
+
+                    var requestBody = new
+                    {
+                        contents = new[]
+                        {
+                            new {
+                                parts = new object[] {
+                                    new { text = prompt },
+                                    new
+                                    {
+                                        inlineData = new
+                                        {
+                                            mimeType,
+                                            data = base64Audio
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    var json = JsonSerializer.Serialize(requestBody);
+                    var response = await httpClient.PostAsync(
+                        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+                        new StringContent(json, Encoding.UTF8, "application/json"), token
+                    );
+
+                    var responseText = await response.Content.ReadAsStringAsync();
+
+                    if (response.StatusCode == HttpStatusCode.TooManyRequests) // 429
+                    {
+                        LoggerService.Log($"⚠️ API key #{retryCount + 1} hit rate limit (429).");
+
+                        bool switched = await ApiKeyManager.SwitchToNextApiKeyAsync();
+                        if (!switched)
+                            await ApiKeyManager.WaitForSwitchAsync();
+
+                        retryCount++;
+                        continue;
+                    }
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        LoggerService.Log($"❌ API error ({(int)response.StatusCode}): {response.ReasonPhrase}. Waiting 30 seconds before retry...");
+                        await Task.Delay(TimeSpan.FromSeconds(30));
+                        continue;
+                    }
+
+                    return ParseTranslatedText(responseText);
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.LogError(ex, "TranslateBatchSrt");
+                    await Task.Delay(TimeSpan.FromSeconds(30));
+                }
+            }
+            return null;
+        }
+
         private static string ParseTranslatedText(string responseText)
         {
             using var doc = JsonDocument.Parse(responseText);

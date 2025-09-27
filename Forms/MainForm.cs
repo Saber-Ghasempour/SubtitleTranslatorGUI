@@ -1,6 +1,7 @@
 ﻿using SubtitleTranslatorGUI.Forms;
 using SubtitleTranslatorGUI.Models;
 using SubtitleTranslatorGUI.Services;
+using System.Text;
 
 namespace SubtitleTranslatorGUI
 {
@@ -216,32 +217,66 @@ namespace SubtitleTranslatorGUI
                 {
                     string videoPath = fileItem.FilePath;
                     var tracks = fileItem.SubtitleTracks;
-                    int selectedTrackIndex = tracks.IndexOf(row.Cells["SubtitleTrack"].Value?.ToString());
-                    string srtPath = GetOriginalSubtitlePath(videoPath);
 
-                    AppendLog($"Extracting subtitle from {fileItem.FileName} ...");
-
-                    bool ok = await FFmpegSubtitleService.ExtractSubtitle(videoPath, selectedTrackIndex, srtPath);
-
-                    if (ok)
+                    if (tracks.Count == 0 || row.Cells["SubtitleTrack"].Value.ToString() == "No subtitles")
                     {
+                        AppendLog($"⚠️ No subtitle tracks found in video: {fileItem.FileName}. Sending audio to create subtitle.");
+                        int chunkSeconds = 300;
+                        var audioPath = Path.Combine(Path.GetDirectoryName(videoPath), Path.GetFileNameWithoutExtension(videoPath) + ".wav");
+                        bool audioOk = FFmpegAudioService.ExtractAudio(videoPath, audioPath);
+                        var audioChunks = FFmpegAudioService.SplitAudio(audioPath, chunkSeconds);
+                        try { if (File.Exists(audioPath)) File.Delete(audioPath); } catch { /* Ignore */ }
+                        var srtParts = new List<string>();
+                        AppendLog($"The video splitted into {audioChunks.Count} parts");
+
+                        int blockNumber = 1;
+                        for (int i = 0; i < audioChunks.Count; i++)
+                        {
+                            var srtChunk = await SubtitleTranslator.SpeechToTextAsync(audioChunks[i], cmbTargetLanguage.SelectedItem.ToString(), token);
+                            if (srtChunk != null) AppendLog($"✅ Subtitle extracted successfully from part {i + 1}.");
+                            var offset = TimeSpan.FromSeconds(i * chunkSeconds);
+                            var srtChunkWithOffset = FFmpegAudioService.OffsetSrtTimestamps(srtChunk, offset);
+                            var srtChunkRenumbered = FFmpegAudioService.RenumberSrtBlocks(srtChunkWithOffset, blockNumber);
+                            srtParts.Add(srtChunkRenumbered);
+
+                            blockNumber += FFmpegAudioService.CountSrtBlocks(srtChunkRenumbered);
+                            try { if (File.Exists(audioChunks[i])) File.Delete(audioChunks[i]); } catch { /* Ignore */ }
+                        }
+
+                        var finalSrt = string.Join("", srtParts);
+                        string finalSrtPath = Path.Combine(Path.GetDirectoryName(videoPath), Path.GetFileNameWithoutExtension(videoPath) + ".srt");
+                        File.WriteAllText(finalSrtPath, finalSrt, Encoding.UTF8);
                         AppendLog($"✅ Subtitle extracted successfully from {fileItem.FileName}.");
-                        await SubtitleProcessingService.ProcessSrtFile(
-                            srtPath,
-                            batchSize,
-                            row,
-                            cmbSourceLanguage.SelectedItem.ToString(),
-                            cmbTargetLanguage.SelectedItem.ToString(),
-                            () => _isPaused,
-                            token
-                        );
                     }
                     else
                     {
-                        AppendLog($"❌ There is an error with extracting subtitle from: {fileItem.FileName}.");
-                        row.Cells["Status"].Value = FileStatus.SubtitleExtractionFailed.ToString();
+                        int selectedTrackIndex = tracks.IndexOf(row.Cells["SubtitleTrack"].Value?.ToString());
+                        string srtPath = GetOriginalSubtitlePath(videoPath);
+
+                        AppendLog($"Extracting subtitle from {fileItem.FileName} ...");
+
+                        bool ok = await FFmpegSubtitleService.ExtractSubtitle(videoPath, selectedTrackIndex, srtPath);
+
+                        if (ok)
+                        {
+                            AppendLog($"✅ Subtitle extracted successfully from {fileItem.FileName}.");
+                            await SubtitleProcessingService.ProcessSrtFile(
+                                srtPath,
+                                batchSize,
+                                row,
+                                cmbSourceLanguage.SelectedItem.ToString(),
+                                cmbTargetLanguage.SelectedItem.ToString(),
+                                () => _isPaused,
+                                token
+                            );
+                        }
+                        else
+                        {
+                            AppendLog($"❌ There is an error with extracting subtitle from: {fileItem.FileName}.");
+                            row.Cells["Status"].Value = FileStatus.SubtitleExtractionFailed.ToString();
+                        }
+                        pbFileProgress.Value++;
                     }
-                    pbFileProgress.Value++;
                 }
             }
             btnStart.Text = "Start";
