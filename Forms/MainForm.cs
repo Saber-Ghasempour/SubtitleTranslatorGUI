@@ -18,6 +18,7 @@ namespace SubtitleTranslatorGUI
             cmbTargetLanguage.SelectedIndex = 0;
             cmbSourceLanguage.SelectedIndex = 9;
             LoggerService.LogAction = AppendLog;
+            lblVersion.Text = $"Version {typeof(Program).Assembly.GetName().Version?.ToString()}";
         }
 
         private async void btnStart_Click(object sender, EventArgs e)

@@ -48,6 +48,7 @@
             label1 = new Label();
             label2 = new Label();
             cmbSourceLanguage = new ComboBox();
+            lblVersion = new ToolStripLabel();
             toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvFiles).BeginInit();
             SuspendLayout();
@@ -108,7 +109,7 @@
             // toolStrip1
             // 
             toolStrip1.ImageScalingSize = new Size(20, 20);
-            toolStrip1.Items.AddRange(new ToolStripItem[] { fileMenu, btnAPIKeyManager });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { fileMenu, btnAPIKeyManager, lblVersion });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(1241, 27);
@@ -238,6 +239,12 @@
             cmbSourceLanguage.Size = new Size(196, 28);
             cmbSourceLanguage.TabIndex = 10;
             // 
+            // lblVersion
+            // 
+            lblVersion.Name = "lblVersion";
+            lblVersion.Size = new Size(18, 24);
+            lblVersion.Text = "V";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -286,5 +293,6 @@
         private DataGridViewComboBoxColumn SubtitleTrack;
         private DataGridViewTextBoxColumn Status;
         private DataGridViewButtonColumn EditColumn;
+        private ToolStripLabel lblVersion;
     }
 }
